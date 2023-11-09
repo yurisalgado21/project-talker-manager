@@ -1,5 +1,8 @@
 const express = require('express');
 const fs = require('fs').promises;
+const crypto = require('crypto');
+
+const generateToken = () => crypto.randomBytes(8).toString('hex');
 
 const path = require('path');
 
@@ -29,7 +32,7 @@ const readFileTalker = async () => {
   }
 };
 
-app.get('/talker', async (req, res) => {
+app.get('/talker', async (_req, res) => {
   try {
     const talker = await readFileTalker();
     if (talker.length === 0) {
@@ -54,4 +57,13 @@ app.get('/talker/:id', async (req, res) => {
   } catch (error) {
     res.status(500).send({ message: error.message });
   }
+});
+
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+  if ([email, password].includes(undefined)) {
+    return res.status(401).json({ message: 'Campos ausentes' });
+  }
+  const token = generateToken();
+  return res.status(200).json({ token });
 });
