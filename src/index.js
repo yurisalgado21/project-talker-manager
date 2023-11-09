@@ -30,9 +30,28 @@ const readFileTalker = async () => {
 };
 
 app.get('/talker', async (req, res) => {
-  const talker = await readFileTalker();
-  if (talker.length === 0) {
-    res.status(200).json([]);
+  try {
+    const talker = await readFileTalker();
+    if (talker.length === 0) {
+      res.status(200).json([]);
+    }
+    res.status(200).json(talker);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server error' });
   }
-  res.status(200).json(talker);
+});
+
+app.get('/talker/:id', async (req, res) => {
+  try {
+    const talker = await readFileTalker();
+    const person = talker.find(({ id }) => id === Number(req.params.id));
+    if (!person) {
+      res.status(404).json({
+        message: 'Pessoa palestrante não encontrada',
+      });
+    }
+    res.status(200).json(person);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
 });
