@@ -7,6 +7,7 @@ const generateToken = () => crypto.randomBytes(8).toString('hex');
 const path = require('path');
 
 const talkerPath = path.resolve(__dirname, './talker.json');
+const { validEmail, validPassword } = require('./middlewares/validateUser');
 
 const app = express();
 app.use(express.json());
@@ -51,7 +52,7 @@ app.get('/talker/:id', async (req, res) => {
   return res.status(200).json(person);
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', validEmail, validPassword, (req, res) => {
   const { email, password } = req.body;
   if ([email, password].includes(undefined)) {
     return res.status(401).json({ message: 'Campos ausentes' });
