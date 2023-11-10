@@ -7,7 +7,12 @@ const generateToken = () => crypto.randomBytes(8).toString('hex');
 const path = require('path');
 
 const talkerPath = path.resolve(__dirname, './talker.json');
+
 const { validEmail, validPassword } = require('./middlewares/validateUser');
+const validateToken = require('./middlewares/validateToken');
+const validateName = require('./middlewares/validateName');
+const validateAge = require('./middlewares/validateAge');
+const { validateTalk, validateRate } = require('./middlewares/validateTalk');
 
 const app = express();
 app.use(express.json());
@@ -60,3 +65,21 @@ app.post('/login', validEmail, validPassword, (req, res) => {
   const token = generateToken();
   return res.status(200).json({ token });
 });
+
+app.post('/talker',
+  validateToken, 
+  validateAge, 
+  validateTalk, 
+  validateRate, 
+  validateName, async (req, res) => {
+    try {
+      const talker = req.body;
+      const talkers = await readFileTalker();
+      talker.id = talkers.length + 1;
+      const allTalkers = JSON.stringify([...talkers, talker]);
+      await fs.writeFile(talkerPath, allTalkers);
+      return res.status(201).json(talker);
+    } catch (error) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
