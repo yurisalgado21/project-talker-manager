@@ -13,6 +13,7 @@ const validateToken = require('./middlewares/validateToken');
 const validateName = require('./middlewares/validateName');
 const validateAge = require('./middlewares/validateAge');
 const { validateTalk, validateRate } = require('./middlewares/validateTalk');
+const validateTalkerId = require('./middlewares/validateTalkerId');
 
 const app = express();
 app.use(express.json());
@@ -83,3 +84,37 @@ app.post('/talker',
       return res.status(500).json({ message: error.message });
     }
   });
+
+app.put('/talker/:id',
+  validateToken, 
+  validateAge, 
+  validateTalk, 
+  validateRate, 
+  validateName,
+  validateTalkerId, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const talker = req.body;
+      const talkers = await readFileTalker();
+      const index = talkers.find((talk) => talk.id === Number(id));
+      talkers[index] = talker;
+      const updateTalker = JSON.stringify([...talkers, talker]);
+      await fs.writeFile(talkerPath, updateTalker);
+      return res.status(200).json(talkers[index]);
+    } catch (error) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+app.delete('/talker/:id', validateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const talkers = await readFileTalker();
+    const filteredTalkers = talkers.find((talker) => talker.id === Number(id));
+    const updatedTalkers = JSON.stringify(filteredTalkers, null, 2);
+    await fs.writeFile(talkerPath, updatedTalkers);
+    return res.status(204).end();
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
