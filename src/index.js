@@ -13,7 +13,6 @@ const validateToken = require('./middlewares/validateToken');
 const validateName = require('./middlewares/validateName');
 const validateAge = require('./middlewares/validateAge');
 const { validateTalk, validateRate } = require('./middlewares/validateTalk');
-const validateTalkerId = require('./middlewares/validateTalkerId');
 
 const app = express();
 app.use(express.json());
@@ -91,16 +90,19 @@ app.put('/talker/:id',
   validateTalk, 
   validateRate, 
   validateName,
-  validateTalkerId, async (req, res) => {
+  async (req, res) => {
     try {
       const { id } = req.params;
-      const talker = req.body;
+      const { name, age, talk } = req.body;
       const talkers = await readFileTalker();
-      const index = talkers.find((talk) => talk.id === Number(id));
-      talkers[index] = talker;
-      const updateTalker = JSON.stringify([...talkers, talker]);
-      await fs.writeFile(talkerPath, updateTalker);
-      return res.status(200).json(talkers[index]);
+      const talkerIndex = talkers.findIndex((talker) => talker.id === Number(id));
+      if (!talkers[talkerIndex]) {
+        return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+      } 
+      talkers[talkerIndex] = { id: Number(id), name, age, talk };
+      const updatedTalker = JSON.stringify(talkers);
+      await fs.writeFile(talkerPath, updatedTalker);
+      return res.status(200).json(talkers[talkerIndex]);
     } catch (error) {
       return res.status(500).json({ message: error.message });
     }
@@ -115,6 +117,6 @@ app.delete('/talker/:id', validateToken, async (req, res) => {
     await fs.writeFile(talkerPath, updatedTalkers);
     return res.status(204).end();
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 });
