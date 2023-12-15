@@ -10,6 +10,21 @@ const validateRate = (req, res, next) => {
   next();
 };
 
+const validateParamRate = (req, res, next) => {
+  const { rate } = req.query;
+
+  if (typeof rate !== 'number') {
+    return res.status(400)
+      .json({ message: 'O campo "rate" deve ser um número inteiro entre 1 e 5' });
+  }
+
+  if (!Number.isInteger(rate) || rate < 1 || rate > 5) {
+    return res.status(400)
+      .json({ message: 'O campo "rate" deve ser um número inteiro entre 1 e 5' });
+  }
+  next();
+};
+
 const validateTalk = (req, res, next) => {
   const { talk } = req.body;
   const isFormatDate = /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/i;
@@ -32,4 +47,5 @@ const validateTalk = (req, res, next) => {
 module.exports = {
   validateTalk,
   validateRate,
+  validateParamRate,
 };

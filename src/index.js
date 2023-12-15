@@ -12,7 +12,7 @@ const { validEmail, validPassword } = require('./middlewares/validateUser');
 const validateToken = require('./middlewares/validateToken');
 const validateName = require('./middlewares/validateName');
 const validateAge = require('./middlewares/validateAge');
-const { validateTalk, validateRate } = require('./middlewares/validateTalk');
+const { validateTalk, validateRate, validateParamRate } = require('./middlewares/validateTalk');
 
 const app = express();
 app.use(express.json());
@@ -46,18 +46,30 @@ app.get('/talker', async (_req, res) => {
   return res.status(200).json(talker);
 });
 
-app.get('/talker/search', validateToken, async (req, res) => {
+app.get('/talker/search', validateToken, validateParamRate, async (req, res) => {
   try {
-    const { q } = req.query;
+    const { q, rate } = req.query;
     const talkers = await readFileTalker();
 
-    if (!q) {
+    if (!q && !rate) {
       return res.status(200).json(talkers);
     }
 
-    const findTalker = talkers.filter((talker) => talker.name
-      .toLowerCase().includes(q.toLowerCase()));
-    return res.status(200).json(findTalker);
+    if (!q && rate) {
+      const findByRate = talkers.filter((talker) => talker.talk.rate === Number(rate));
+      return res.status(200).json(findByRate);
+    }
+
+    if (q && !rate) {
+      const findTalker = talkers.filter((talker) => talker.name
+        .toLowerCase().includes(q.toLowerCase()));
+      return res.status(200).json(findTalker);
+    }
+    if (q && rate) {
+      const findByQandRate = talkers.filter((talker) => talker.name
+        .toLowerCase().includes(q.toLowerCase()) && talker.talk.rate === Number(rate));
+      return res.status(200).json(findByQandRate);
+    }
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
